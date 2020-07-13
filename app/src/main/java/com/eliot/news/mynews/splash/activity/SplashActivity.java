@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -24,6 +25,8 @@ import com.eliot.news.mynews.splash.bean.Action;
 import com.eliot.news.mynews.splash.bean.Ads;
 import com.eliot.news.mynews.splash.bean.AdsDetail;
 import com.eliot.news.mynews.util.Constant;
+import com.eliot.news.mynews.util.HttpRespon;
+import com.eliot.news.mynews.util.HttpUtil;
 import com.eliot.news.mynews.util.ImageUtil;
 import com.eliot.news.mynews.util.JsonUtil;
 import com.eliot.news.mynews.util.Md5Helper;
@@ -184,30 +187,18 @@ public class SplashActivity extends Activity {
 
     public void httpRequest()
     {
-        final OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                .url(Constant.SPLASH_URL)
-                .build();
-        Call call = client.newCall(request);
-        call.enqueue(new Callback() {
+        HttpUtil util = HttpUtil.getInstance();
+        util.getDate(Constant.SPLASH_URL, new HttpRespon<String>(String.class){
             @Override
-            public void onFailure(Call call, IOException e) {
-                e.printStackTrace();
+            public void onError(String msg)
+            {
+                Log.i("测试8","error msg" + msg);
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                String data = response.body().string();
-                Ads ads = JsonUtil.parseJson(data, Ads.class);
-                if (ads != null){
-                    SharePrenceUtil.saveString(SplashActivity.this, JSON_CACHE, data);
-                    SharePrenceUtil.saveInt(SplashActivity.this, JSON_CACHE_TIME_OUT, ads.getNext_req());
-                    SharePrenceUtil.saveLong(SplashActivity.this, JSON_CACHE_LAST_SUCCESS, System.currentTimeMillis());
-                    Intent intent = new Intent();
-                    intent.setClass(SplashActivity.this, DownloadImageService.class);
-                    intent.putExtra(DownloadImageService.ADS_DATA, ads);
-                    startService(intent);
-                }
+            public void onSuccess(String s)
+            {
+                Log.i("测试8","onSuccess" + s.toString());
             }
         });
     }
