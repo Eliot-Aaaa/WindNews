@@ -6,6 +6,7 @@ import android.os.Message;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -42,7 +43,7 @@ import java.util.List;
  * @UpdateRemark: 更新说明
  * @Version: 1.0
  */
-public class HotFragment extends Fragment implements ViewPager.OnPageChangeListener
+public class HotFragment extends Fragment implements ViewPager.OnPageChangeListener, AbsListView.OnScrollListener
 {
     ListView mListView;
 
@@ -53,12 +54,23 @@ public class HotFragment extends Fragment implements ViewPager.OnPageChangeListe
     MyHandler mHandler;
     HotAdapter adapter;
     LayoutInflater inflater;
+
+    boolean isToEnd = false;
+    boolean isHttpRequestIng = false;
+
     private final static int INIT_SUCCESS = 0;
+
+    private final static int UPDATE_SUCCESS = 1;
 
     ViewPager viewpager;
     BannerAdapter bAdapter;
     TextView bannerTitle;
     LinearLayout dots;
+
+    int startIndex = 0;
+    int endIndex = 0;
+    int pageSize = 20;
+    int count = 0;
 
     @Nullable
     @Override
@@ -73,57 +85,108 @@ public class HotFragment extends Fragment implements ViewPager.OnPageChangeListe
     public void onActivityCreated(@Nullable Bundle savedInstanceState)
     {
         super.onActivityCreated(savedInstanceState);
+        initCollection();
+        initView();
+        getData(true);
+    }
+
+    private void initCollection()
+    {
         mBanners = new ArrayList<>();
         mHotDetails = new ArrayList<>();
-
         views = new ArrayList<>();
         dot_imgs = new ArrayList<>();
-        mHandler = new MyHandler(this);
+    }
 
+    private void initView()
+    {
+        mHandler = new MyHandler(this);
         inflater = LayoutInflater.from(getActivity());
         View head = inflater.inflate(R.layout.include_banner, null);
         mListView.addHeaderView(head);
+        mListView.setOnScrollListener(this);
         viewpager = (ViewPager) head.findViewById(R.id.viewpager);
         viewpager.addOnPageChangeListener(this);
         bannerTitle = (TextView) head.findViewById(R.id.title);
         dots = (LinearLayout)head.findViewById(R.id.dots);
-        HttpUtil util = HttpUtil.getInstance();
-        util.getDate(Constant.HOT_URL, new HttpRespon<Hot>(Hot.class) {
-            @Override
-            public void onError(String msg) {
-
-            }
-
-            @Override
-            public void onSuccess(Hot hot) {
-
-                //获取列表的数据
-                if(null!=hot&&null!=hot.getT1348647909107()){
-                    List<HotDetail> details = hot.getT1348647909107();
-                    //取出第0位包含轮播图的数据
-                    HotDetail tmp_baner = details.get(1);
-                    List<Banner> banners = tmp_baner.getAds();
-                    if (banners != null && banners.size() > 0)
-                    {
-                        mBanners.addAll(banners);
-                    }
-                    //获取轮播图片成功
-
-                    //删除轮播图片数据
-                    details.remove(1);
-                    mHotDetails.addAll(details);
-                    //列表数据加载完成
-
-                    //获取数据完毕，发送消息更新UI(异步线程无法更改UI)
-                    mHandler.sendEmptyMessage(INIT_SUCCESS);
-                }
-            }
-        });
     }
 
     public  void initDate(){
         adapter = new HotAdapter(mHotDetails,getActivity());
         mListView.setAdapter(adapter);
+    }
+
+    private void getData(final boolean isInit)
+    {
+        if(isHttpRequestIng)
+            return;
+        isHttpRequestIng = true;
+        HttpUtil util = HttpUtil.getInstance();
+        calIndex();
+        String url = Constant.getHotUrl(startIndex,endIndex);
+        util.getDate(url, new HttpRespon<Hot>(Hot.class) {
+            @Override
+            public void onError(String msg) {
+                isHttpRequestIng = false;
+            }
+
+            @Override
+            public void onSuccess(Hot hot) {
+                isHttpRequestIng = false;
+                //获取列表的数据
+                if(null!=hot&&null!=hot.getT1348647909107()){
+                    count++;
+                    List<HotDetail> details = hot.getT1348647909107();
+                    if (isInit)
+                    {//取出第0位包含轮播图的数据
+                        HotDetail tmp_baner = details.get(1);
+                        List<Banner> banners = tmp_baner.getAds();
+                        if (banners != null && banners.size() > 0)
+                        {
+                            mBanners.addAll(banners);
+                        }
+                        //获取轮播图片成功
+
+                        //删除轮播图片数据
+                        details.remove(1);
+                        mHotDetails.addAll(details);
+                        //列表数据加载完成
+
+                        //获取数据完毕，发送消息更新UI(异步线程无法更改UI)
+                        mHandler.sendEmptyMessage(INIT_SUCCESS);
+                    }
+                    else
+                    {
+                        Message message = mHandler.obtainMessage(UPDATE_SUCCESS);
+                        message.obj = details;
+                        mHandler.sendMessage(message);
+                    }
+                }
+            }
+        });
+    }
+
+    public void calIndex(){
+        if(count==0){
+            endIndex = startIndex+20;
+        }else{
+            startIndex = endIndex;
+            endIndex = startIndex+20;
+        }
+
+    }
+
+    public void update(List<HotDetail> newDate)
+    {
+        if(null==adapter)
+        {
+            mHotDetails = new ArrayList<>();
+            mHotDetails.addAll(newDate);
+            adapter = new HotAdapter(mHotDetails, getActivity());
+            mListView.setAdapter(adapter);
+        }
+        else
+            adapter.addData(newDate);
     }
 
     @Override
@@ -145,6 +208,22 @@ public class HotFragment extends Fragment implements ViewPager.OnPageChangeListe
 
     }
 
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState)
+    {
+        if(scrollState == SCROLL_STATE_IDLE&&isToEnd)
+            getData(false);
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount)
+    {
+        if(view.getLastVisiblePosition()==totalItemCount-1)
+            isToEnd = true;
+        else
+            isToEnd = false;
+    }
+
     static class MyHandler extends Handler
     {
         WeakReference<HotFragment> weak_fragment ;
@@ -163,6 +242,10 @@ public class HotFragment extends Fragment implements ViewPager.OnPageChangeListe
                 case INIT_SUCCESS:
                     hot.initDate();
                     hot.initBanner();
+                    break;
+                case UPDATE_SUCCESS:
+                    List<HotDetail> date = (List<HotDetail>) msg.obj;
+                    hot.update(date);
                     break;
 
                 default:

@@ -18,6 +18,7 @@ import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
 import com.nostra13.universalimageloader.core.listener.ImageLoadingListener;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @ProjectName: WindNews
@@ -121,12 +122,22 @@ public class HotAdapter extends BaseAdapter
             }
         });
     }
-}
 
-class ViewHolder {
-    ImageView icon;
-    TextView title;
-    TextView source;
-    TextView reply_count;
-    TextView special;
+    public void addData(List<HotDetail> add)
+    {
+        if (mHotDetails == null)
+        {
+            mHotDetails = new ArrayList<>();
+        }
+        mHotDetails.addAll(add);
+        notifyDataSetChanged();
+    }
+
+    class ViewHolder {
+        ImageView icon;
+        TextView title;
+        TextView source;
+        TextView reply_count;
+        TextView special;
+    }
 }
