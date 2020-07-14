@@ -17,7 +17,7 @@ import com.google.gson.Gson;
  * @Version: 1.0
  */
 public class JsonUtil {
-    private static Gson mGson;
+    static Gson mGson;
 
     public static <T> T parseJson(String json, Class<T> tClass)
     {

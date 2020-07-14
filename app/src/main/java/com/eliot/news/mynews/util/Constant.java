@@ -21,11 +21,19 @@ public class Constant {
     public static final String HOT_URL =
             "http://c.m.163.com/nc/article/headline/T1348647909107/%S-%E.html?from=toutiao&size=20&passport=&devId=bMo6EQztO2ZGFBurrbgcMQ%3D%3D&lat=YO6p1koFB04ckeiATuYaGw%3D%3D&lon=SQIt%2FB7%2BSqySYsiVHI%2FDiQ%3D%3D&version=7.0&net=wifi&ts=1463198253&sign=VHsiElahM1HTWFL0pnd52EoxE3w9piu1mp9jiCwGatd48ErR02zJ6%2FKXOnxX046I&encryption=1&canal=goapk_news";
 
+    public static final String DETAIL_URL="http://c.m.163.com/nc/article/%D/full.html";
+
     public static String getHotUrl(int start,int end)
     {
         String result;
         result =  HOT_URL.replace("%S",String.valueOf(start));
         result = result.replace("%E",String.valueOf(end));
         return result;
+    }
+
+    public static String getDetailUrl(String docid){
+        String result;
+        result =  DETAIL_URL.replace("%D",docid);
+        return  result;
     }
 }

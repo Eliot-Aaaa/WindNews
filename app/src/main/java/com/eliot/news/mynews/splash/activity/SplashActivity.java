@@ -78,9 +78,16 @@ public class SplashActivity extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_splash);
+        //View decorView = getWindow().getDecorView();
+        //decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE);
+        initView();
 
-        View decorView = getWindow().getDecorView();
-        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_IMMERSIVE);
+        getAds();
+        showImage();
+    }
+
+    private void initView()
+    {
         ads_img = findViewById(R.id.ads);
         mHandler = new MyHandler(this);
         time = (TimeView)findViewById(R.id.time);
@@ -93,10 +100,6 @@ public class SplashActivity extends Activity {
         });
 
         total = length/space;
-        mHandler.post(reshRing);
-
-        getAds();
-        showImage();
     }
 
     Runnable NoPhotoGotoMain = new Runnable() {
@@ -120,8 +123,8 @@ public class SplashActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        mHandler.removeCallbacks(NoPhotoGotoMain);
         super.onBackPressed();
+        mHandler.removeCallbacks(reshRing);
     }
 
     public void showImage()
@@ -129,6 +132,8 @@ public class SplashActivity extends Activity {
         String cache = SharePrenceUtil.getString(this, JSON_CACHE);
         if (!TextUtils.isEmpty(cache))
         {
+            time.setVisibility(View.VISIBLE);
+            mHandler.post(reshRing);
             int index = SharePrenceUtil.getInt(this, LAST_IMAGE_INDEX);
             Ads ads = JsonUtil.parseJson(cache, Ads.class);
             int size = ads.getAds().size();
@@ -160,6 +165,8 @@ public class SplashActivity extends Activity {
                                     intent.setClass(SplashActivity.this, WebViewActivity.class);
                                     intent.putExtra(WebViewActivity.ACTION_NAME, action);
                                     startActivity(intent);
+                                    finish();
+                                    mHandler.removeCallbacks(reshRing);
                                 }
                             }
                         });

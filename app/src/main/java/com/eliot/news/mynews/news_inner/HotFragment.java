@@ -1,12 +1,15 @@
 package com.eliot.news.mynews.news_inner;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -18,6 +21,7 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
 import com.eliot.news.mynews.R;
+import com.eliot.news.mynews.activity.DetailActivity;
 import com.eliot.news.mynews.adapter.BannerAdapter;
 import com.eliot.news.mynews.adapter.HotAdapter;
 import com.eliot.news.mynews.bean.Banner;
@@ -105,6 +109,18 @@ public class HotFragment extends Fragment implements ViewPager.OnPageChangeListe
         View head = inflater.inflate(R.layout.include_banner, null);
         mListView.addHeaderView(head);
         mListView.setOnScrollListener(this);
+        mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.i("测试16", "捕获ListView点击事件 ");
+                Intent intent = new Intent();
+                intent.setClass(getActivity(), DetailActivity.class);
+                HotDetail detail = adapter.getDateByIndex(position-mListView.getHeaderViewsCount());
+                intent.putExtra(DetailActivity.DOCID, detail.getDocid());
+                startActivity(intent);
+                getActivity().overridePendingTransition(R.anim.activity_in, R.anim.activity_out);
+            }
+        });
         viewpager = (ViewPager) head.findViewById(R.id.viewpager);
         viewpager.addOnPageChangeListener(this);
         bannerTitle = (TextView) head.findViewById(R.id.title);
@@ -139,7 +155,7 @@ public class HotFragment extends Fragment implements ViewPager.OnPageChangeListe
                     List<HotDetail> details = hot.getT1348647909107();
                     if (isInit)
                     {//取出第0位包含轮播图的数据
-                        HotDetail tmp_baner = details.get(1);
+                        HotDetail tmp_baner = details.get(0);
                         List<Banner> banners = tmp_baner.getAds();
                         if (banners != null && banners.size() > 0)
                         {
@@ -148,7 +164,7 @@ public class HotFragment extends Fragment implements ViewPager.OnPageChangeListe
                         //获取轮播图片成功
 
                         //删除轮播图片数据
-                        details.remove(1);
+                        details.remove(0);
                         mHotDetails.addAll(details);
                         //列表数据加载完成
 
