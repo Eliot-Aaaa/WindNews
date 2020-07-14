@@ -199,6 +199,22 @@ public class SplashActivity extends Activity {
             public void onSuccess(String s)
             {
                 Log.i("测试8","onSuccess" + s.toString());
+                Ads ads = JsonUtil.parseJson(s, Ads.class);
+                if (ads != null){
+                    //请求成功
+                    Log.i("测试1:", "广告数据请求成功");
+                    //Http成功后，缓存json
+                    SharePrenceUtil.saveString(SplashActivity.this, JSON_CACHE, s);
+                    ////Http成功后，缓存超时时间
+                    SharePrenceUtil.saveInt(SplashActivity.this, JSON_CACHE_TIME_OUT, ads.getNext_req());
+                    //Http成功后，缓存上次请求成功的时间
+                    SharePrenceUtil.saveLong(SplashActivity.this, JSON_CACHE_LAST_SUCCESS, System.currentTimeMillis());
+
+                    Intent intent = new Intent();
+                    intent.setClass(SplashActivity.this, DownloadImageService.class);
+                    intent.putExtra(DownloadImageService.ADS_DATA, ads);
+                    startService(intent);
+                }
             }
         });
     }
