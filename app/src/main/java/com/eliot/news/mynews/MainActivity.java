@@ -11,11 +11,14 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TabHost;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.eliot.news.mynews.fragment.EmptyFragment;
 import com.eliot.news.mynews.fragment.NewsFragment;
 
 public class MainActivity extends AppCompatActivity {
+
+    long lastbacktime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,5 +55,18 @@ public class MainActivity extends AppCompatActivity {
         title.setText(titles[index]);
         icon.setImageResource(icons[index]);
         return title_view;
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        long now = System.currentTimeMillis();
+        if (now - lastbacktime < 1000)
+        {
+            finish();
+        }
+        else
+            Toast.makeText(MainActivity.this, "再按一次退出网易新闻", Toast.LENGTH_SHORT).show();
+        lastbacktime = now;
     }
 }
